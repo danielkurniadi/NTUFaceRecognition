@@ -38,7 +38,7 @@ class FaceDataset:
                  detection_confidence=0.5):
 
         if names is None:
-            names = sorted(os.listdir('face_dataset'))
+            names = sorted(os.listdir(data_root))
 
         self.data_root = data_root
         self.names = names
@@ -101,13 +101,13 @@ class FaceDataset:
 
 class AlignedFaceDataset:
     def __init__(self,
-                 data_root='face_dataset_pruned',
+                 data_root='new_face_dataset_plus',
                  names=None,
                  detector=dlib.get_frontal_face_detector(),
                  aligner=Aligner()
                  ):
         if names is None:
-            names = sorted(os.listdir('face_dataset'))
+            names = sorted(os.listdir(data_root))
 
         self.data_root = data_root
         self.names = names
@@ -147,35 +147,45 @@ class AlignedFaceDataset:
 
     def get_aligned_face(self, filename):
         image = cv2.imread(filename)
-        image = imutils.resize(image, width=300)
-        padded_image = _pad_with_black(image)
-        detections = self.detector(padded_image, 0)
-        aligned_faces, _ = self.draw_face_with_landmarks(padded_image, detections)
+        image = imutils.resize(image, width=500)
+        # padded_image = _pad_with_black(image)
+        detections = self.detector(image, 0)
+        aligned_faces, _ = self.draw_face_with_landmarks(image, detections)
 
-        # if len(aligned_faces) != 1:
-        #     raise RuntimeError("{}, # of detected face(s): {}".format(filename, len(aligned_faces)))
-
-        return aligned_faces[0]
+        if len(aligned_faces) != 1:
+            return aligned_faces
+        else:
+            return aligned_faces[0]
 
 
 class NormalizedDataset:
-    def __init__(self, face_dataset=AlignedFaceDataset(), size=(300, 250)):
+    def __init__(self, face_dataset=AlignedFaceDataset()):
         self.face_dataset = face_dataset
-        self.size = size
+        self.size = (self.face_dataset.aligner.desired_face_height,
+                     self.face_dataset.aligner.desired_face_width)
 
     def __getitem__(self, i):
+
         filename, image, label = self.face_dataset[i]
 
-        image = cv2.resize(image, self.size)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        image = cv2.dnn.blobFromImage(image, 1 / image.std(), self.size, image.mean())
-        image = image.flatten()
+        if image == []:
+            print('{} no face'.format(filename))
+            return filename, image, label
+        else:
+            try:
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                image = cv2.dnn.blobFromImage(image, 1 / image.std(), self.size, image.mean())
+                image = image.flatten()
+            except TypeError:
+                import pdb
+                pdb.set_trace()
 
-        return filename, image, label
+            return filename, image, label
 
     def __len__(self):
         return len(self.face_dataset)
 
 
 if __name__ == "__main__":
-    FaceDataset()
+    dataset = NormalizedDataset(AlignedFaceDataset(data_root='new_face_dataset/'))
+    dataset_items = [item for item in dataset]
