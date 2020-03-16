@@ -4,27 +4,32 @@ import numpy as np
 import dlib
 from imutils import face_utils
 import os
-import imutils
+import glob
 
-NAMELIST = sorted(os.listdir('face_dataset_pruned'))
+
+NAMELIST = sorted(os.listdir('new_face_dataset_plus'))
+FILENAMES = []
+for i, name in enumerate(NAMELIST):
+    person_image_filenames = sorted(glob.glob(os.path.join('new_face_dataset_plus', name, '*')))
+    FILENAMES.extend(person_image_filenames)
 
 
 class Aligner:
     def __init__(self,
                  landmark_annotator=dlib.shape_predictor('dlib-models/shape_predictor_5_face_landmarks.dat'),
-                 desired_left_eye=(0.35, 0.35),
-                 desired_face_width=250,
-                 desired_face_height=300):
+                 desired_left_eye=(0.25, 0.25),
+                 desired_face_height=300,
+                 desired_face_width=300):
         self.landmark_annotator = landmark_annotator
         self.desired_left_eye = desired_left_eye
-        self.desired_face_width = desired_face_width
         self.desired_face_height = desired_face_height
+        self.desired_face_width = desired_face_width
 
     def annotate_landmark(self, image, rect):
         shape = self.landmark_annotator(image, rect)
         shape = face_utils.shape_to_np(shape)
 
-        # for (i, (x, y)) in enumerate(shape):
+        # for (i, (x, y)) in enumerate(shap:
         #     image = cv2.circle(image, (x, y), 1, (0, 0, 255), -1)
         #     image = cv2.putText(image, str(i + 1), (x - 10, y - 10),
         #                         cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
@@ -74,9 +79,8 @@ class Display:
                  aligner=Aligner(),
                  stream=cv2.VideoCapture(0),
                  detection_confidence=0.90,
-                 pca=load('pca.joblib'),
-                 classifier=load('classif.joblib'),
-                 pca_input_size=(300, 250)):
+                 pca=load('joint_pca.joblib'),
+                 classifier=load('joint_classif.joblib')):
 
         self.detector = detector
         self.aligner = aligner
@@ -84,12 +88,13 @@ class Display:
         self.detection_confidence = detection_confidence
         self.pca = pca
         self.classifier = classifier
-        self.pca_input_size = pca_input_size
+
+        self.size = (self.aligner.desired_face_height,
+                     self.aligner.desired_face_width)
 
     def transform_image(self, image):
-        # image = cv2.resize(image, self.pca_input_size)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        image = cv2.dnn.blobFromImage(image, 1 / image.std(), self.pca_input_size, image.mean())
+        image = cv2.dnn.blobFromImage(image, 1 / image.std(), self.size, image.mean())
         image = image.flatten()
 
         return image
@@ -98,7 +103,8 @@ class Display:
         transformed_image = self.transform_image(image)
         reduced_image = self.pca.transform(transformed_image.reshape(1, -1))
         classif_result = self.classifier.predict(reduced_image).item()
-        person_name = NAMELIST[classif_result]
+        # person_name = NAMELIST[classif_result]
+        person_name = FILENAMES[classif_result]
 
         return person_name
 
@@ -149,6 +155,8 @@ class Display:
 
             cv2.imshow('EE4208', displayed_image)
 
+            for aligned_face in aligned_faces:
+                cv2.imshow('ALIGNED FACE', aligned_face)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
