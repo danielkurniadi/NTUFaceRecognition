@@ -1,0 +1,9 @@
+opencv-python>=3.4
+scikit-learn==0.22
+numpy>=1.17
+pillow>=6.2
+imutils==0.5.3
+matplotlib
+seaborn
+jupyter
+scipy
