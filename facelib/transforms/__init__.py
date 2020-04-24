@@ -1,1 +1,1 @@
-from .face_preprocessings import *
+from .face_preprocessing import *
