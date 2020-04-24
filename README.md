@@ -5,6 +5,17 @@ The technology of Face Recognition has been employed in many applications in the
 
 Principal component analysis addressed the problem by allowing a more compact and robust representation. This further enables a faster and more robust face matching in a face recognition system. This project follows the general thought of a face recognition system.
 
+### Jupyter Notebook: Docs and Experimentation Results 
+
+Our experimentation most likely take place in Jupyter (Python3) Notebook environment. Our notebooks can be found under
+[notebooks folder](notebooks/). The experimentation is the following:
+
+* **Face PCA.ipynb**: Experimentation with PCA, SVM-SGD Classifier for face recognition and emotion classification. Plotting and visualisation included.
+
+* **face_pipeline.ipynb**: Experimentation with training and live demo pipeline with image processing stages
+
+Refer to the official site of [Jupyterlab](https://jupyter.org/) on how to run a jupyter environment, or you can simply
+use [Google colabs](https://colab.research.google.com/) as an alternative.
 
 ### Example of usage
 
